@@ -17,7 +17,7 @@ $Config{'startperl'}
 
 #line 18
 
-use Getopt::Long 2.17;
+use Getopt::Long;
 use Text::Abbrev;
 
 \$VERSION = '$VERSION';
@@ -72,13 +72,13 @@ sub error {
 }
 
 if ($version) {
-    print "rename $VERSION\n";
+    print "$ME $VERSION\n";
     exit 0;
 }
 
 if ($help) {
     print<<HELP;
-Usage: rename [OPTION]... PERLEXPR FILE...
+Usage: $ME [OPTION]... PERLEXPR FILE...
 Rename FILE(s) using PERLEXPR on each filename.
 
   -b, --backup                 make backup before removal
@@ -156,15 +156,22 @@ for (@ARGV) {
 		$old = "$_$backup_suffix";
 	    }
             print "backup: $_ -> $old\n" if $verbose && $nothing;
+
+            unless ($nothing) {
+                if (rename($_,$old)) {
+                    warn "$ME: cannot create `$_': $!\n";
+                    next;
+                }
+            }
         }
     }
-    print "$was -> $_\n" if $verbose || $nothing;
+
+    print "$was ", $linkonly?"=":'-', "> $_\n" if $verbose || $nothing;
     unless ($nothing) {
-        rename($_,$old) if $backup;
         if ($linkonly) {
-	    link($was,$_);
+	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
         } else {
-            rename($was,$_);
+            rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
 	}
     }
 }
