@@ -1,7 +1,7 @@
 use Config;
 use File::Basename qw(basename dirname);
 
-($VERSION)=' $Id: rename.PL,v 1.3 2000/01/26 14:02:57 pederst Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
+($VERSION)=' $Id: rename.PL,v 1.4 2000/01/26 18:13:50 pederst Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
 
 chdir(dirname($0));
 ($file = basename($0)) =~ s/\.PL$//;
