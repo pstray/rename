@@ -99,7 +99,7 @@ version control may be set with VERSION_CONTROL, values are:
   nil, existing   numbered if numbered backups exist, simple otherwise
   never, simple   always make simple backups
 
-Report bugs to pederst\@ifi.uio.no
+Report bugs to pederst\@cpan.org
 HELP
     exit 0; #'
 }
@@ -199,8 +199,8 @@ I<perlexpr>
 
 I<Rename> renames the filenames supplied according to the rule
 specified as the first argument.  The argument is a Perl expression
-which is expected to modify the $_ string in Perl for at least some of
-the filenames specified.  If a given filename is not modified by the
+which is expected to modify the $_ string for at least some of the
+filenames specified.  If a given filename is not modified by the
 expression, it will not be renamed.  If no filenames are given on the
 command line, filenames will be read via standard input.
 
@@ -319,7 +319,7 @@ If you give an invalid Perl expression you'll get a syntax error.
 
 =head1 AUTHOR
 
-Peder Stray <pederst@ifi.uio.no>
+Peder Stray <pederst@cpan.org>, original script from Larry Wall.
 
 =cut
 !NO!SUBST!
