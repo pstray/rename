@@ -15,18 +15,17 @@ print "Extracting $file\n";
 print OUT <<"!DO!SUBST!";
 $Config{'startperl'}
 
-use Getopt::Long;
+#line 18
+
+use Getopt::Long 2.17;
 use Text::Abbrev;
 
 \$VERSION = '$VERSION';
 
 !DO!SUBST!
 
-if ($] > 5.002) {
-    print OUT "Getopt::Long::config(qw(bundling));\n";
-}
-
 print OUT<<'!NO!SUBST!';
+Getopt::Long::config(qw(bundling));
 $Getopt::Long::prefix = '--';
 
 ($ME = $0) =~ s!.*/!!;
@@ -39,6 +38,7 @@ $interactive     = 0;
 $verbose         = 0;
 $help            = 0;
 $version         = 0;
+$linkonly        = 0;
 $backup_suffix   = $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
 $version_control = $ENV{VERSION_CONTROL} || 'existing';
 
@@ -65,6 +65,7 @@ sub error {
 	       'S|suffix=s'           => \$backup_suffix,
 	       'V|version-control=s'  => \$version_control,
 	       'n|just-print|dry-run' => \$nothing,
+               'l|link-only'          => \$linkonly,
 	       'help'                 => \$help,
 	       'version'              => \$version,
 	      );
@@ -87,6 +88,7 @@ Rename FILE(s) using PERLEXPR on each filename.
   -v, --verbose                explain what is being done
   -V, --version-control=WORD   override the usual version control
   -n, --just-print, --dry-run  don't rename, implies --verbose
+  -l, --link-only              link file instead of reame
       --help                   display this help and exit
       --version                output version information and exit
 
@@ -159,7 +161,11 @@ for (@ARGV) {
     print "$was -> $_\n" if $verbose || $nothing;
     unless ($nothing) {
         rename($_,$old) if $backup;
-        rename($was,$_);
+        if ($linkonly) {
+	    link($was,$_);
+        } else {
+            rename($was,$_);
+	}
     }
 }
 
@@ -172,7 +178,7 @@ rename - renames multiple files
 =head1 SYNOPSIS
 
 B<rename>
-[B<-bfivn>]
+[B<-bfivnl>]
 [B<-S> I<backup-suffix>]
 [B<-V> {I<numbered>,I<existing>,I<simple>}]
 [B<--backup>]
@@ -183,6 +189,7 @@ B<rename>
 [B<--version-control=>{I<numbered>,I<existing>,I<simple>}]
 [B<--dry-run>]
 [B<--just-print>]
+[B<--link-only>]
 [B<--help>]
 [B<--version>]
 I<perlexpr>
@@ -228,6 +235,11 @@ Print the name of each file before renaming it.
 Do everything but the actual renaming, insted just print the name of
 each file that would be renamed. When used together with B<--verbose>,
 also print names of backups.
+
+=item B<-l>, B<--link-only>
+
+Link files to the new names instead of renaming them. This will keep
+the original files.
 
 =item B<--help>
 
