@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.2  Wed Jan 26 12:46:45 2000
+	- added --link-only option
+
 1.1  Fri Apr  9 19:22:51 1999
 	- original version
 
