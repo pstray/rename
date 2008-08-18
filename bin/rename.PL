@@ -21,7 +21,7 @@ use strict;
 
 use Getopt::Long;
 use Text::Abbrev;
-use File::Path;
+use File::Basename;
 
 my \$VERSION = '$VERSION';
 
@@ -142,26 +142,6 @@ for (@ARGV) {
     die $@ if $@;
     next if $was eq $_;
 
-    if (m,/,) {
-        my $dir = $_;
-        $dir =~ s,/[^/]+$,,;
-
-        unless (-d $dir) {
-            print "mkdir: $dir\n" if $verbose || $nothing;
-            unless ($nothing) {
-                eval { mkpath($dir) };
-                if ($@) {
-                    my $err = $@;
-                    for ($err) {
-                        s/ at \S+ line \d+\s*$//;
-                        s/^mkdir //;
-                    }
-                    warn "$ME: mkdir failed: $err\n";
-                 }
-             }
-         }
-    }
-
     if (-e $_) {
         unless ($force) {
 	    if (! -w && -t) {
@@ -198,6 +178,19 @@ for (@ARGV) {
     }
 
     print "$was ", $linkonly?"=":'-', "> $_\n" if $verbose || $nothing;
+
+    if (m,/,) {
+        my $dir = File::Basename::dirname($_);
+        unless (-d $dir) {
+            if ($nothing) {
+                print "mkdir: $dir\n" if $verbose;
+            }
+            else {
+                mkpath($dir) || next;
+            }
+         }
+    }
+
     unless ($nothing) {
         if ($linkonly) {
 	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
@@ -205,6 +198,32 @@ for (@ARGV) {
             rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
 	}
     }
+}
+
+sub mkpath {
+    my($path) = @_;
+    $path .= '/' if $^O eq 'os2' and $path =~ /^\w:\z/s; # feature of CRT 
+    # Logic wants Unix paths, so go with the flow.
+    if ($^O eq 'VMS') {
+        next if $path eq '/';
+        $path = VMS::Filespec::unixify($path);
+        if ($path =~ m:^(/[^/]+)/?\z:) {
+            $path = $1.'/000000';
+        }
+    }
+    return 1 if -d $path;
+    my $parent = File::Basename::dirname($path);
+    unless (-d $parent or $path eq $parent) {
+        mkpath($parent) || return;
+    }
+    #print "mkdir: $path\n" if $verbose;
+    unless (mkdir($path, 0777)) {
+        unless (-d $path) {
+            warn "$ME: cannot mkdir `$path': $!\n";
+            return;
+        }
+    }
+    return 1;
 }
 
 __END__
