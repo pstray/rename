@@ -21,6 +21,7 @@ use strict;
 
 use Getopt::Long;
 use Text::Abbrev;
+use File::Path;
 
 my \$VERSION = '$VERSION';
 
@@ -137,6 +138,27 @@ for (@ARGV) {
     eval $op;
     die $@ if $@;
     next if $was eq $_;
+
+    if (m,/,) {
+        my $dir = $_;
+        $dir =~ s,/[^/]+$,,;
+
+        unless (-d $dir) {
+            print "mkdir: $dir\n" if $verbose || $nothing;
+            unless ($nothing) {
+                eval { mkpath($dir) };
+                if ($@) {
+                    my $err = $@;
+                    for ($err) {
+                        s/ at \S+ line \d+\s*$//;
+                        s/^mkdir //;
+                    }
+                    warn "$ME: mkdir failed: $err\n";
+                 }
+             }
+         }
+    }
+
     if (-e $_) {
         unless ($force) {
 	    if (! -w && -t) {
