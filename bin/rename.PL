@@ -149,9 +149,10 @@ for (@ARGV) {
 	    }
 	}
 	if ($backup) {
+            my $old;
 	    if ($vcm) {
-		@old = sort {($a=~/~(\d*)~/)[0] <=> ($b=~/~(\d*)~/)[0]} <$_.~*~>;
-		($old = $old[-1]) =~ s/~(\d*)~$/'~'.($1+1).'~'/e;
+		($old) = sort {($b=~/~(\d*)~/)[0] <=> ($a=~/~(\d*)~/)[0]} <$_.~*~>;
+		$old =~ s/~(\d*)~$/'~'.($1+1).'~'/e;
 		if ($vcm & VCM_TEST) {
 		    $old ||= "$_$backup_suffix";
 		} elsif ($vcm & VCM_NUMBERED) {
