@@ -135,7 +135,10 @@ if (!@ARGV) {
 
 for (@ARGV) {
     my $was = $_;
-    eval $op;
+    {
+        no strict;
+        eval $op;
+    }
     die $@ if $@;
     next if $was eq $_;
 
