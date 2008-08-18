@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.5  Mon Aug 18 14:21:12 2008
+	- use strict, added mkdir support, fixed small typos
+
 1.4  Wed Jan 26 18:13:50 2000
 	- Added some error messages
 
