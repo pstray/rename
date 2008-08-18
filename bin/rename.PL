@@ -17,10 +17,12 @@ $Config{'startperl'}
 
 #line 18
 
+use strict;
+
 use Getopt::Long;
 use Text::Abbrev;
 
-\$VERSION = '$VERSION';
+my \$VERSION = '$VERSION';
 
 !DO!SUBST!
 
@@ -28,19 +30,22 @@ print OUT<<'!NO!SUBST!';
 Getopt::Long::config(qw(bundling));
 $Getopt::Long::prefix = '--';
 
+my $ME = $0;
 ($ME = $0) =~ s!.*/!!;
 $| = 1;
 
-$nothing         = 0;
-$backup          = 0;
-$force           = 0;
-$interactive     = 0;
-$verbose         = 0;
-$help            = 0;
-$version         = 0;
-$linkonly        = 0;
-$backup_suffix   = $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
-$version_control = $ENV{VERSION_CONTROL} || 'existing';
+my $nothing         = 0;
+my $backup          = 0;
+my $force           = 0;
+my $interactive     = 0;
+my $verbose         = 0;
+my $help            = 0;
+my $version         = 0;
+my $linkonly        = 0;
+my $backup_suffix   = $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
+my $version_control = $ENV{VERSION_CONTROL} || 'existing';
+
+my $vcm             = 0;
 
 sub error {
     my($ERROR) = @_;
@@ -119,7 +124,7 @@ if ($backup) {
 	   }}{$vcm};
 }
 
-$op = shift
+my $op = shift
     or error('missing arguments');
 
 if (!@ARGV) {
@@ -128,7 +133,7 @@ if (!@ARGV) {
 }
 
 for (@ARGV) {
-    $was = $_;
+    my $was = $_;
     eval $op;
     die $@ if $@;
     next if $was eq $_;
