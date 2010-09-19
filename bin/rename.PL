@@ -59,7 +59,7 @@ my $vcm;
 sub error {
     my($ERROR) = @_;
     print "$ME: $ERROR\n";
-    print "try: `$ME --help' for more information.\n";
+    print "Try `$ME --help' for more information.\n";
     exit 1;
 }
 
@@ -67,7 +67,8 @@ sub error {
     local $SIG{__WARN__} = sub {
 	if ($_[0] =~ /^Unknown option: (\S+)/) {
 	    error("unrecognized option `--$1'");
-	} else {
+	}
+        else {
 	    print @_;
 	}
     };
@@ -220,7 +221,8 @@ for (@ARGV) {
     unless ($opt_dryrun) {
         if ($opt_linkonly) {
 	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
-        } else {
+        }
+        else {
             rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
 	}
     }
