@@ -287,17 +287,17 @@ I<perlexpr>
 
 =head1 DESCRIPTION
 
-I<Rename> renames the filenames supplied according to the rule
-specified as the first argument.  The argument is a Perl expression
-which is expected to modify the $_ string for at least some of the
-filenames specified.  If a given filename is not modified by the
-expression, it will not be renamed.  If no filenames are given on the
-command line, filenames will be read via standard input.
+I<rename> renames the filenames supplied according to the rule specified
+as the first argument.  The argument is a Perl expression which is
+expected to modify the $_ string for at least some of the filenames
+specified.  If a given filename is not modified by the expression, it
+will not be renamed.  If no filenames are given on the command line,
+filenames will be read via standard input.
 
 If a destination file is unwritable, the standard input is a tty, and
 the B<-f> or B<--force> option is not given, mv prompts the user for
-whether to overwrite the file.  If the response does not begin with
-`y' or `Y', the file is skipped.
+whether to overwrite the file.  If the response does not begin with `y'
+or `Y', the file is skipped.
 
 =head1 OPTIONS
 
@@ -319,64 +319,82 @@ I<prefix> to a file name when generating its backup file name.
 
 Remove existing destination files and never prompt the user.
 
+=item B<-h>, B<--help>
+
+Print a summary of options and exit.
+
 =item B<-i>, B<--interactive>
 
 Prompt whether to overwrite each destination file that already exists.
 If the response does not begin with `y' or `Y', the file is skipped.
 
-=item B<-v>, B<--verbose>
+=item B<-l>, B<--link-only>
 
-Print the name of each file before renaming it.
+Link files to the new names instead of renaming them. This will keep the
+original files.
 
 =item B<-n>, B<--just-print>, B<--dry-run>
 
 Do everything but the actual renaming, insted just print the name of
 each file that would be renamed. When used together with B<--verbose>,
-also print names of backups.
+also print names of backups (which may or may not be correct depending
+on previous renaming).
 
-=item B<-l>, B<--link-only>
+=item B<-v>, B<--verbose>
 
-Link files to the new names instead of renaming them. This will keep
-the original files.
+Print the name of each file before renaming it.
 
-=item B<--help>
+=item B<-V> I<method>, B<--version-control=>I<method>
 
-Print a usage message on standard output and exit.
+Use I<method> to determine backup file names.  The method can also be
+given by the B<RENAME_VERSION_CONTROL> (or if that's not set, the
+B<VERSION_CONTROL>) environment variable, which is overridden by this
+option.  This option does not affect wheter backup files are made; it
+affects only the name of any backup files that are made.
+
+The value of I<method> is like the GNU Emacs `version-control' variable;
+B<rename> also recognize synonyms that are more descriptive.  The valid
+values are (unique abbreviations are accepted):
+
+=over
+
+=item B<existing> or B<nil>
+
+Make numbered backups of files that already have them, otherwise simple
+backups. This is the default.
+
+=item B<numbered> or B<t>
+
+Make numbered backups.  The numbered backup file name for I<F> is
+B<I<F>.~I<N>~> where I<N> is the version number.
+
+=item B<simple> or B<never>
+
+Make simple backups.  The B<-B> or B<--prefix>, B<-Y> or
+B<--basename-prefix>, and B<-z> or B<--suffix> options specify the
+simple backup file name.  If none of these options are given, then a
+simple backup suffix is used, either the value of
+B<SIMPLE_BACKUP_SUFFIX> environment variable if set, or B<~> otherwise.
+
+=back
 
 =item B<--version>
 
 Print version information on standard output then exit successfully.
 
-=item B<-S>, B<--suffix> I<backup-suffix>
+=item B<-Y> I<prefix>, B<--basename-prefix=>I<prefix>
 
-The suffix used for making simple backup files can be set with the
-B<SIMPLE_BACKUP_SUFFIX> environment variable, which can be overridden by
-this option. If neither of those is given, the default is `~', as it
-is in Emacs.
+Use the B<simple> method to determine backup file names (see the B<-V>
+I<method> or B<--version-control=>I<method> option), and prefix
+I<prefix> to the basename of a file name when generating its backup file
+name. For example, with B<-Y .del/> the simple backup file name for
+B<a/b/foo> is B<a/b/.del/foo>.
 
-=item B<-V>, B<--version-control> {I<numbered>,I<existing>,I<simple>}
+=item B<-z> I<suffix>, B<-S> I<suffix>, B<--suffix=>I<suffix>
 
-The type of backups made can be set with the B<VERSION_CONTROL>
-environment variable, which can be overridden by this option.  If
-B<VERSION_CONTROL> is not set and this option is not given, the
-default backup type is `existing'.  The value of the
-B<VERSION_CONTROL> environment variable and the argument to this
-option are like the GNU Emacs `version-control' variable; they also
-recognize synonyms that are more descriptive.  The valid values are
-(unique abbreviations are accepted):
-
-`t' or `numbered'
-
-	Always make numbered backups.
-
-`nil' or `existing'
-
-	Make numbered backups of files that already
- 	have them, simple backups of the others.
-
-`never' or `simple'
-
-	Always make simple backups.
+Use the B<simple> method to determine backup file names (see the B<-V>
+I<method> or B<--version-control=>I<method> option), and append
+I<suffix> to a file name when generating its backup file name.
 
 =back
 
