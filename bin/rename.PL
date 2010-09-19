@@ -195,6 +195,17 @@ for (@ARGV) {
             print "backup: $_ -> $old\n" if $opt_verbose && $opt_dryrun;
 
             unless ($opt_dryrun) {
+                if ($old =~ m,/,) {
+                    my $dir = File::Basename::dirname($old);
+                    unless (-d $dir) {
+                        if ($opt_dryrun) {
+                            print "mkdir: $dir\n" if $opt_verbose;
+                        }
+                        else {
+                            mkpath($dir) || next;
+                        }
+                    }
+                }
                 unless (rename($_,$old)) {
                     warn "$ME: cannot create `$old': $!\n";
                     next;
