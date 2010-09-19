@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.8  Sun Sep 19 20:19:36 2010
+	- Ensure directories exist for backup files.
+
 1.7  Sun Sep 19 19:47:47 2010
         - Fixed a long standing bug related to backup
 	- Added --prefix, --basename-prefix and -z for --suffix
