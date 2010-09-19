@@ -35,8 +35,6 @@ my $ME = $0;
 ($ME = $0) =~ s!.*/!!;
 $| = 1;
 
-
-my $vcm             = 0;
 my $opt_dryrun          = 0;
 my $opt_backup          = 0;
 my $opt_force           = 0;
@@ -45,8 +43,18 @@ my $opt_verbose         = 0;
 my $opt_help            = 0;
 my $opt_version         = 0;
 my $opt_linkonly        = 0;
-my $opt_suffix          = $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
-my $opt_vcm             = $ENV{VERSION_CONTROL} || 'existing';
+my $opt_prefix          = '';
+my $opt_suffix          = '';
+my $opt_basename_prefix = '';
+my $opt_vcm             = $ENV{RENAME_VERSION_CONTROL}
+                        || $ENV{VERSION_CONTROL}
+                        || 'existing';
+
+sub VCM_SIMPLE   { 0 }
+sub VCM_TEST     { 1 }
+sub VCM_NUMBERED { 2 }
+
+my $vcm;
 
 sub error {
     my($ERROR) = @_;
@@ -65,6 +73,7 @@ sub error {
     };
     GetOptions(
 	       'b|backup'             => \$opt_backup,
+               'B|prefix=s'           => \$opt_prefix,
 	       'f|force'              => \$opt_force,
 	       'h|help'               => \$opt_help,
 	       'i|interactive'        => \$opt_interactive,
@@ -73,6 +82,7 @@ sub error {
 	       'version'              => \$opt_version,
 	       'v|verbose'            => \$opt_verbose,
 	       'V|version-control=s'  => \$opt_vcm,
+               'Y|basename-prefix=s'  => \$opt_basename_prefix,
 	       'z|S|suffix=s'         => \$opt_suffix,
 	      );
 }
@@ -88,12 +98,14 @@ Usage: $ME [OPTION]... PERLEXPR FILE...
 Rename FILE(s) using PERLEXPR on each filename.
 
   -b, --backup                  make backup before removal
+  -B, --prefix=SUFFIX           set backup filename prefix
   -f, --force                   remove existing destinations, never prompt
   -i, --interactive             prompt before overwrite
   -l, --link-only               link file instead of reame
   -n, --just-print, --dry-run   don't rename, implies --verbose
   -v, --verbose                 explain what is being done
   -V, --version-control=METHOD  override the usual version control
+  -Y, --basename-prefix=PREFIX  set backup filename basename prefix
   -z, -S, --suffix=SUFFIX       set backup filename suffix
       --help                    display this help and exit
       --version                 output version information and exit
@@ -101,28 +113,32 @@ Rename FILE(s) using PERLEXPR on each filename.
 The backup suffix is ~, unless set with SIMPLE_BACKUP_SUFFIX.  The
 version control may be set with VERSION_CONTROL, values are:
 
-  t, numbered     make numbered backups
-  nil, existing   numbered if numbered backups exist, simple otherwise
-  never, simple   always make simple backups
+  numbered, t     make numbered backups
+  existing, nil   numbered if numbered backups exist, simple otherwise
+  simple, never   always make simple backups
 
 Report bugs to pederst\@cpan.org
 HELP
     exit 0; #'
 }
 
-sub VCM_TEST     { 0x0001 }
-sub VCM_NUMBERED { 0x0002 }
-
-    $vcm = ${abbrev qw(nil existing t numbered never simple)}{$version_control};
-    error("invalid version contol type `$version_control'") unless $vcm;
-    $vcm = ${{ nil      => VCM_TEST,
-	       existing => VCM_TEST,
-	       t        => VCM_NUMBERED,
-	       numbered => VCM_NUMBERED,
-	       never    => 0,
-	       simple   => 0,
-	   }}{$vcm};
 if ($opt_backup) {
+    if ($opt_prefix || $opt_basename_prefix || $opt_suffix) {
+        $vcm = VCM_SIMPLE;
+    }
+    else {
+        $vcm = ${abbrev qw(nil existing t numbered never simple)}{$opt_vcm};
+        error("invalid version contol type `$opt_vcm'") unless $vcm;
+        $vcm = ${{ nil      => VCM_TEST,
+	           existing => VCM_TEST,
+	           t        => VCM_NUMBERED,
+                   numbered => VCM_NUMBERED,
+	           never    => VCM_SIMPLE,
+	           simple   => VCM_SIMPLE,
+	        }}{$vcm};
+    }
+
+    $opt_suffix ||= $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
 }
 
 my $op = shift
@@ -156,16 +172,24 @@ for (@ARGV) {
 	}
 	if ($opt_backup) {
             my $old;
-	    if ($vcm) {
-		($old) = sort {($b=~/~(\d*)~/)[0] <=> ($a=~/~(\d*)~/)[0]} <$_.~*~>;
-		$old =~ s/~(\d*)~$/'~'.($1+1).'~'/e;
-		if ($vcm & VCM_TEST) {
-		    $old ||= "$_$backup_suffix";
-		} elsif ($vcm & VCM_NUMBERED) {
+	    if ($vcm == VCM_SIMPLE) {
+                if (m,^(.*/)?(.*),) {
+		    $old = "$opt_prefix$1$opt_basename_prefix$2$opt_suffix";
+                }
+	    }
+            else {
+		($old) = sort {($b=~/~(\d+)~$/)[0] <=> ($a=~/~(\d+)~$/)[0]} <$_.~*~>;
+		$old =~ s/~(\d+)~$/'~'.($1+1).'~'/e;
+		if ($vcm == VCM_TEST) {
+                    unless ($old) {
+                        if (m,^(.*/)?(.*),) {
+	  	            $old = "$opt_prefix$1$opt_basename_prefix$2$opt_suffix";
+                        }
+                    }
+		}
+                elsif ($vcm == VCM_NUMBERED) {
 		    $old ||= "$_.~1~";
 		}
-	    } else {
-		$old = "$_$backup_suffix";
 	    }
             print "backup: $_ -> $old\n" if $opt_verbose && $opt_dryrun;
 
@@ -241,14 +265,17 @@ B<rename>
 [B<-B> I<prefix>]
 [B<-S> I<suffix>]
 [B<-V> I<method>]
+[B<-Y> I<prefix>]
 [B<-z> I<suffix>]
 [B<--backup>]
+[B<--basename-prefix=>I<prefix>]
 [B<--dry-run>]
 [B<--force>]
 [B<--help>]
 [B<--interactive>]
 [B<--just-print>]
 [B<--link-only>]
+[B<--prefix=>I<prefix>]
 [B<--suffix=>I<suffix>]
 [B<--verbose>]
 [B<--version-control=>I<method>]
@@ -276,7 +303,15 @@ whether to overwrite the file.  If the response does not begin with
 
 =item B<-b>, B<--backup>
 
-Make backups of files that are about to be removed.
+Make backup files.  That is, when about to overwrite a file, rename the
+original instead of removing it.  See the B<-V> or B<--version-control>
+option fo details about how backup file names are determined.
+
+=item B<-B> I<prefix>, B<--prefix=>I<prefix>
+
+Use the B<simple> method to determine backup file names (see the B<-V>
+I<method> or B<--version-control=>I<method> option), and prepend
+I<prefix> to a file name when generating its backup file name.
 
 =item B<-f>, B<--force>
 
