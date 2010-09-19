@@ -1,5 +1,10 @@
 Revision history for Perl tool rename.
 
+1.7  Sun Sep 19 19:47:47 2010
+        - Fixed a long standing bug related to backup
+	- Added --prefix, --basename-prefix and -z for --suffix
+	- Updated documentation
+
 1.6  Mon Aug 18 16:45:06 2008
 	- inlined mkpath for better control of error messages.
 	- turn of strict when evaling perl code.
