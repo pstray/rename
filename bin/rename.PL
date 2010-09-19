@@ -35,18 +35,18 @@ my $ME = $0;
 ($ME = $0) =~ s!.*/!!;
 $| = 1;
 
-my $nothing         = 0;
-my $backup          = 0;
-my $force           = 0;
-my $interactive     = 0;
-my $verbose         = 0;
-my $help            = 0;
-my $version         = 0;
-my $linkonly        = 0;
-my $backup_suffix   = $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
-my $version_control = $ENV{VERSION_CONTROL} || 'existing';
 
 my $vcm             = 0;
+my $opt_dryrun          = 0;
+my $opt_backup          = 0;
+my $opt_force           = 0;
+my $opt_interactive     = 0;
+my $opt_verbose         = 0;
+my $opt_help            = 0;
+my $opt_version         = 0;
+my $opt_linkonly        = 0;
+my $opt_suffix          = $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
+my $opt_vcm             = $ENV{VERSION_CONTROL} || 'existing';
 
 sub error {
     my($ERROR) = @_;
@@ -64,39 +64,39 @@ sub error {
 	}
     };
     GetOptions(
-	       'b|backup'             => \$backup,
-	       'f|force'              => \$force,
-	       'i|interactive'        => \$interactive,
-	       'v|verbose'            => \$verbose,
-	       'S|suffix=s'           => \$backup_suffix,
-	       'V|version-control=s'  => \$version_control,
-	       'n|just-print|dry-run' => \$nothing,
-               'l|link-only'          => \$linkonly,
-	       'help'                 => \$help,
-	       'version'              => \$version,
+	       'b|backup'             => \$opt_backup,
+	       'f|force'              => \$opt_force,
+	       'h|help'               => \$opt_help,
+	       'i|interactive'        => \$opt_interactive,
+               'l|link-only'          => \$opt_linkonly,
+	       'n|just-print|dry-run' => \$opt_dryrun,
+	       'version'              => \$opt_version,
+	       'v|verbose'            => \$opt_verbose,
+	       'V|version-control=s'  => \$opt_vcm,
+	       'z|S|suffix=s'         => \$opt_suffix,
 	      );
 }
 
-if ($version) {
+if ($opt_version) {
     print "$ME $VERSION\n";
     exit 0;
 }
 
-if ($help) {
+if ($opt_help) {
     print<<HELP;
 Usage: $ME [OPTION]... PERLEXPR FILE...
 Rename FILE(s) using PERLEXPR on each filename.
 
-  -b, --backup                 make backup before removal
-  -f, --force                  remove existing destinations, never prompt
-  -i, --interactive            prompt before overwrite
-  -S, --suffix=SUFFIX          override the usual backup suffix
-  -v, --verbose                explain what is being done
-  -V, --version-control=WORD   override the usual version control
-  -n, --just-print, --dry-run  don't rename, implies --verbose
-  -l, --link-only              link file instead of reame
-      --help                   display this help and exit
-      --version                output version information and exit
+  -b, --backup                  make backup before removal
+  -f, --force                   remove existing destinations, never prompt
+  -i, --interactive             prompt before overwrite
+  -l, --link-only               link file instead of reame
+  -n, --just-print, --dry-run   don't rename, implies --verbose
+  -v, --verbose                 explain what is being done
+  -V, --version-control=METHOD  override the usual version control
+  -z, -S, --suffix=SUFFIX       set backup filename suffix
+      --help                    display this help and exit
+      --version                 output version information and exit
 
 The backup suffix is ~, unless set with SIMPLE_BACKUP_SUFFIX.  The
 version control may be set with VERSION_CONTROL, values are:
@@ -113,7 +113,6 @@ HELP
 sub VCM_TEST     { 0x0001 }
 sub VCM_NUMBERED { 0x0002 }
 
-if ($backup) {
     $vcm = ${abbrev qw(nil existing t numbered never simple)}{$version_control};
     error("invalid version contol type `$version_control'") unless $vcm;
     $vcm = ${{ nil      => VCM_TEST,
@@ -123,6 +122,7 @@ if ($backup) {
 	       never    => 0,
 	       simple   => 0,
 	   }}{$vcm};
+if ($opt_backup) {
 }
 
 my $op = shift
@@ -143,17 +143,18 @@ for (@ARGV) {
     next if $was eq $_;
 
     if (-e $_) {
-        unless ($force) {
+        unless ($opt_force) {
 	    if (! -w && -t) {
 		printf "%s: overwrite `%s', overriding mode 0%03o? ",
                        $ME, $_, (stat _)[2]&0777;
 		next unless <STDIN> =~ /^y/i;
-	    } elsif ($interactive) {
+	    }
+            elsif ($opt_interactive) {
 		print "$ME: replace `$_'? ";
 		next unless <STDIN> =~ /^y/i;
 	    }
 	}
-	if ($backup) {
+	if ($opt_backup) {
             my $old;
 	    if ($vcm) {
 		($old) = sort {($b=~/~(\d*)~/)[0] <=> ($a=~/~(\d*)~/)[0]} <$_.~*~>;
@@ -166,24 +167,25 @@ for (@ARGV) {
 	    } else {
 		$old = "$_$backup_suffix";
 	    }
-            print "backup: $_ -> $old\n" if $verbose && $nothing;
+            print "backup: $_ -> $old\n" if $opt_verbose && $opt_dryrun;
 
-            unless ($nothing) {
-                if (rename($_,$old)) {
-                    warn "$ME: cannot create `$_': $!\n";
+            unless ($opt_dryrun) {
+                unless (rename($_,$old)) {
+                    warn "$ME: cannot create `$old': $!\n";
                     next;
                 }
             }
         }
     }
 
-    print "$was ", $linkonly?"=":'-', "> $_\n" if $verbose || $nothing;
+    print "$was ", $opt_linkonly ? "=" : '-', "> $_\n"
+       if $opt_verbose || $opt_dryrun;
 
     if (m,/,) {
         my $dir = File::Basename::dirname($_);
         unless (-d $dir) {
-            if ($nothing) {
-                print "mkdir: $dir\n" if $verbose;
+            if ($opt_dryrun) {
+                print "mkdir: $dir\n" if $opt_verbose;
             }
             else {
                 mkpath($dir) || next;
@@ -191,8 +193,8 @@ for (@ARGV) {
          }
     }
 
-    unless ($nothing) {
-        if ($linkonly) {
+    unless ($opt_dryrun) {
+        if ($opt_linkonly) {
 	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
         } else {
             rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
@@ -216,7 +218,7 @@ sub mkpath {
     unless (-d $parent or $path eq $parent) {
         mkpath($parent) || return;
     }
-    #print "mkdir: $path\n" if $verbose;
+    #print "mkdir: $path\n" if $opt_verbose;
     unless (mkdir($path, 0777)) {
         unless (-d $path) {
             warn "$ME: cannot mkdir `$path': $!\n";
@@ -235,22 +237,24 @@ rename - renames multiple files
 =head1 SYNOPSIS
 
 B<rename>
-[B<-bfivnl>]
-[B<-S> I<backup-suffix>]
-[B<-V> {I<numbered>,I<existing>,I<simple>}]
+[B<-bfilnv>]
+[B<-B> I<prefix>]
+[B<-S> I<suffix>]
+[B<-V> I<method>]
+[B<-z> I<suffix>]
 [B<--backup>]
-[B<--force>]
-[B<--interactive>]
-[B<--verbose>]
-[B<--suffix=>I<backup-suffix>]
-[B<--version-control=>{I<numbered>,I<existing>,I<simple>}]
 [B<--dry-run>]
+[B<--force>]
+[B<--help>]
+[B<--interactive>]
 [B<--just-print>]
 [B<--link-only>]
-[B<--help>]
+[B<--suffix=>I<suffix>]
+[B<--verbose>]
+[B<--version-control=>I<method>]
 [B<--version>]
 I<perlexpr>
-[I<files>]...
+[F<files>]...
 
 =head1 DESCRIPTION
 
