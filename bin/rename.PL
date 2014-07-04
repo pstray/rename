@@ -41,6 +41,7 @@ my $opt_force           = 0;
 my $opt_interactive     = 0;
 my $opt_verbose         = 0;
 my $opt_help            = 0;
+my $opt_stdin           = 1;
 my $opt_version         = 0;
 my $opt_linkonly        = 0;
 my $opt_prefix          = '';
@@ -80,6 +81,7 @@ sub error {
 	       'i|interactive'        => \$opt_interactive,
                'l|link-only'          => \$opt_linkonly,
 	       'n|just-print|dry-run' => \$opt_dryrun,
+               's|stdin!'             => \$opt_stdin,
 	       'version'              => \$opt_version,
 	       'v|verbose'            => \$opt_verbose,
 	       'V|version-control=s'  => \$opt_vcm,
@@ -146,8 +148,13 @@ my $op = shift
     or error('missing arguments');
 
 if (!@ARGV) {
-    @ARGV = <STDIN>;
-    chomp(@ARGV);
+    if ($opt_stdin) {
+        @ARGV = <STDIN>;
+        chomp(@ARGV);
+    }
+    else {
+       exit;
+    }
 }
 
 for (@ARGV) {
