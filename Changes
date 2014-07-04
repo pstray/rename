@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.9  Fri Jul  4 02:51:17 2014
+	- use bsd_glob to handle files with space in the name.
+
 1.8  Sun Sep 19 20:19:36 2010
 	- Ensure directories exist for backup files.
 
