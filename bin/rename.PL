@@ -292,6 +292,7 @@ B<rename>
 [B<--dry-run>]
 [B<--force>]
 [B<--help>]
+[B<--no-stdin>]
 [B<--interactive>]
 [B<--just-print>]
 [B<--link-only>]
@@ -340,6 +341,11 @@ Remove existing destination files and never prompt the user.
 =item B<-h>, B<--help>
 
 Print a summary of options and exit.
+
+=item B<-no-stdin>
+
+Disable reading of filenames from STDIN. Us it when your shell has nullglob
+enabled to make sure rename doesn't wait for input.
 
 =item B<-i>, B<--interactive>
 
