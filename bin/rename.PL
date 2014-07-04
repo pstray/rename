@@ -22,6 +22,7 @@ use strict;
 use Getopt::Long;
 use Text::Abbrev;
 use File::Basename;
+use File::Glob ':bsd_glob';
 
 my \$VERSION = '$VERSION';
 
@@ -186,7 +187,7 @@ for (@ARGV) {
                 }
 	    }
             else {
-		($old) = sort {($b=~/~(\d+)~$/)[0] <=> ($a=~/~(\d+)~$/)[0]} <$_.~*~>;
+		($old) = sort {($b=~/~(\d+)~$/)[0] <=> ($a=~/~(\d+)~$/)[0]} bsd_glob "$_.~*~";
 		$old =~ s/~(\d+)~$/'~'.($1+1).'~'/e;
 		if ($vcm == VCM_TEST) {
                     unless ($old) {
