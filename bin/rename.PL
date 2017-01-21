@@ -105,7 +105,7 @@ Rename FILE(s) using PERLEXPR on each filename.
   -B, --prefix=SUFFIX           set backup filename prefix
   -f, --force                   remove existing destinations, never prompt
   -i, --interactive             prompt before overwrite
-  -l, --link-only               link file instead of reame
+  -l, --link-only               link file instead of rename
   -n, --just-print, --dry-run   don't rename, implies --verbose
   -v, --verbose                 explain what is being done
   -V, --version-control=METHOD  override the usual version control
