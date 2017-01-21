@@ -277,7 +277,7 @@ __END__
 
 =head1 NAME
 
-rename - renames multiple files
+rename - renames multiple files using perl expressions
 
 =head1 SYNOPSIS
 
@@ -307,17 +307,17 @@ I<perlexpr>
 
 =head1 DESCRIPTION
 
-I<rename> renames the filenames supplied according to the rule specified
-as the first argument.  The argument is a Perl expression which is
-expected to modify the $_ string for at least some of the filenames
-specified.  If a given filename is not modified by the expression, it
-will not be renamed.  If no filenames are given on the command line,
-filenames will be read via standard input.
+I<rename> renames the filenames supplied according to the rule specified as
+the first argument.  The argument is a Perl expression which is expected to
+modify the $_ string for at least some of the filenames specified.  If a
+given filename is not modified by the expression, it will not be renamed.
+If no filenames are given on the command line, filenames will be read via
+standard input (unless B<--no-stdin> is supplied on the command line).
 
-If a destination file is unwritable, the standard input is a tty, and
-the B<-f> or B<--force> option is not given, mv prompts the user for
-whether to overwrite the file.  If the response does not begin with `y'
-or `Y', the file is skipped.
+If a destination file is unwritable, the standard input is a tty, and the
+B<-f> or B<--force> option is not given, rename prompts the user for whether
+to overwrite the file.  If the response does not begin with `y' or `Y', the
+file is skipped.
 
 =head1 OPTIONS
 
