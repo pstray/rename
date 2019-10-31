@@ -360,7 +360,7 @@ original files.
 
 =item B<-n>, B<--just-print>, B<--dry-run>
 
-Do everything but the actual renaming, insted just print the name of
+Do everything but the actual renaming, instead just print the name of
 each file that would be renamed. When used together with B<--verbose>,
 also print names of backups (which may or may not be correct depending
 on previous renaming).
@@ -374,7 +374,7 @@ Print the name of each file before renaming it.
 Use I<method> to determine backup file names.  The method can also be
 given by the B<RENAME_VERSION_CONTROL> (or if that's not set, the
 B<VERSION_CONTROL>) environment variable, which is overridden by this
-option.  This option does not affect wheter backup files are made; it
+option.  This option does not affect whether backup files are made; it
 affects only the name of any backup files that are made.
 
 The value of I<method> is like the GNU Emacs `version-control' variable;
