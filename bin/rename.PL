@@ -6,8 +6,8 @@ use File::Basename qw(basename dirname);
 chdir(dirname($0));
 ($file = basename($0)) =~ s/\.PL$//;
 $file =~ s/\.pl$//
-        if ($Config{'osname'} eq 'VMS' or
-            $Config{'osname'} eq 'OS2');  # "case-forgiving"
+	if ($Config{'osname'} eq 'VMS' or
+	    $Config{'osname'} eq 'OS2');  # "case-forgiving"
 open OUT,">$file" or die "Can't create $file: $!";
 chmod(0755, $file);
 print "Extracting $file\n";
@@ -49,8 +49,8 @@ my $opt_prefix          = '';
 my $opt_suffix          = '';
 my $opt_basename_prefix = '';
 my $opt_vcm             = $ENV{RENAME_VERSION_CONTROL}
-                        || $ENV{VERSION_CONTROL}
-                        || 'existing';
+			|| $ENV{VERSION_CONTROL}
+			|| 'existing';
 
 sub VCM_SIMPLE   { 0 }
 sub VCM_TEST     { 1 }
@@ -70,23 +70,23 @@ sub error {
 	if ($_[0] =~ /^Unknown option: (\S+)/) {
 	    error("unrecognized option `--$1'");
 	}
-        else {
+	else {
 	    print @_;
 	}
     };
     GetOptions(
 	       'b|backup'             => \$opt_backup,
-               'B|prefix=s'           => \$opt_prefix,
+	       'B|prefix=s'           => \$opt_prefix,
 	       'f|force'              => \$opt_force,
 	       'h|help'               => \$opt_help,
 	       'i|interactive'        => \$opt_interactive,
-               'l|link-only'          => \$opt_linkonly,
+	       'l|link-only'          => \$opt_linkonly,
 	       'n|just-print|dry-run' => \$opt_dryrun,
-               's|stdin!'             => \$opt_stdin,
+	       's|stdin!'             => \$opt_stdin,
 	       'version'              => \$opt_version,
 	       'v|verbose'            => \$opt_verbose,
 	       'V|version-control=s'  => \$opt_vcm,
-               'Y|basename-prefix=s'  => \$opt_basename_prefix,
+	       'Y|basename-prefix=s'  => \$opt_basename_prefix,
 	       'z|S|suffix=s'         => \$opt_suffix,
 	      );
 }
@@ -128,18 +128,18 @@ HELP
 
 if ($opt_backup) {
     if ($opt_prefix || $opt_basename_prefix || $opt_suffix) {
-        $vcm = VCM_SIMPLE;
+	$vcm = VCM_SIMPLE;
     }
     else {
-        $vcm = ${abbrev qw(nil existing t numbered never simple)}{$opt_vcm};
-        error("invalid version contol type `$opt_vcm'") unless $vcm;
-        $vcm = ${{ nil      => VCM_TEST,
-	           existing => VCM_TEST,
-	           t        => VCM_NUMBERED,
-                   numbered => VCM_NUMBERED,
-	           never    => VCM_SIMPLE,
-	           simple   => VCM_SIMPLE,
-	        }}{$vcm};
+	$vcm = ${abbrev qw(nil existing t numbered never simple)}{$opt_vcm};
+	error("invalid version contol type `$opt_vcm'") unless $vcm;
+	$vcm = ${{ nil      => VCM_TEST,
+		   existing => VCM_TEST,
+		   t        => VCM_NUMBERED,
+		   numbered => VCM_NUMBERED,
+		   never    => VCM_SIMPLE,
+		   simple   => VCM_SIMPLE,
+		}}{$vcm};
     }
 
     $opt_suffix ||= $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
@@ -150,8 +150,8 @@ my $op = shift
 
 if (!@ARGV) {
     if ($opt_stdin) {
-        @ARGV = <STDIN>;
-        chomp(@ARGV);
+	@ARGV = <STDIN>;
+	chomp(@ARGV);
     }
     else {
        exit;
@@ -161,114 +161,114 @@ if (!@ARGV) {
 for (@ARGV) {
     my $was = $_;
     {
-        no strict;
-        eval $op;
+	no strict;
+	eval $op;
     }
     die $@ if $@;
     next if $was eq $_;
 
     if (-e $_) {
-        unless ($opt_force) {
+	unless ($opt_force) {
 	    if (! -w && -t) {
 		printf "%s: overwrite `%s', overriding mode 0%03o? ",
-                       $ME, $_, (stat _)[2]&0777;
+		       $ME, $_, (stat _)[2]&0777;
 		next unless <STDIN> =~ /^y/i;
 	    }
-            elsif ($opt_interactive) {
+	    elsif ($opt_interactive) {
 		print "$ME: replace `$_'? ";
 		next unless <STDIN> =~ /^y/i;
 	    }
 	}
 	if ($opt_backup) {
-            my $old;
+	    my $old;
 	    if ($vcm == VCM_SIMPLE) {
-                if (m,^(.*/)?(.*),) {
+		if (m,^(.*/)?(.*),) {
 		    $old = "$opt_prefix$1$opt_basename_prefix$2$opt_suffix";
-                }
+		}
 	    }
-            else {
+	    else {
 		($old) = sort {($b=~/~(\d+)~$/)[0] <=> ($a=~/~(\d+)~$/)[0]} bsd_glob "$_.~*~";
 		$old =~ s/~(\d+)~$/'~'.($1+1).'~'/e;
 		if ($vcm == VCM_TEST) {
-                    unless ($old) {
-                        if (m,^(.*/)?(.*),) {
-	  	            $old = "$opt_prefix$1$opt_basename_prefix$2$opt_suffix";
-                        }
-                    }
+		    unless ($old) {
+			if (m,^(.*/)?(.*),) {
+			    $old = "$opt_prefix$1$opt_basename_prefix$2$opt_suffix";
+			}
+		    }
 		}
-                elsif ($vcm == VCM_NUMBERED) {
+		elsif ($vcm == VCM_NUMBERED) {
 		    $old ||= "$_.~1~";
 		}
 	    }
-            print "backup: $_ -> $old\n" if $opt_verbose && $opt_dryrun;
+	    print "backup: $_ -> $old\n" if $opt_verbose && $opt_dryrun;
 
-            unless ($opt_dryrun) {
-                if ($old =~ m,/,) {
-                    my $dir = File::Basename::dirname($old);
-                    unless (-d $dir) {
-                        if ($opt_dryrun) {
-                            print "mkdir: $dir\n" if $opt_verbose;
-                        }
-                        else {
-                            mkpath($dir) || next;
-                        }
-                    }
-                }
-                unless (rename($_,$old)) {
-                    warn "$ME: cannot create `$old': $!\n";
-                    next;
-                }
-            }
-        }
+	    unless ($opt_dryrun) {
+		if ($old =~ m,/,) {
+		    my $dir = File::Basename::dirname($old);
+		    unless (-d $dir) {
+			if ($opt_dryrun) {
+			    print "mkdir: $dir\n" if $opt_verbose;
+			}
+			else {
+			    mkpath($dir) || next;
+			}
+		    }
+		}
+		unless (rename($_,$old)) {
+		    warn "$ME: cannot create `$old': $!\n";
+		    next;
+		}
+	    }
+	}
     }
 
     print "$was ", $opt_linkonly ? "=" : '-', "> $_\n"
        if $opt_verbose || $opt_dryrun;
 
     if (m,/,) {
-        my $dir = File::Basename::dirname($_);
-        unless (-d $dir) {
-            if ($opt_dryrun) {
-                print "mkdir: $dir\n" if $opt_verbose;
-            }
-            else {
-                mkpath($dir) || next;
-            }
-         }
+	my $dir = File::Basename::dirname($_);
+	unless (-d $dir) {
+	    if ($opt_dryrun) {
+		print "mkdir: $dir\n" if $opt_verbose;
+	    }
+	    else {
+		mkpath($dir) || next;
+	    }
+	 }
     }
 
     unless ($opt_dryrun) {
-        if ($opt_linkonly) {
+	if ($opt_linkonly) {
 	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
-        }
-        else {
-            rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
+	}
+	else {
+	    rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
 	}
     }
 }
 
 sub mkpath {
     my($path) = @_;
-    $path .= '/' if $^O eq 'os2' and $path =~ /^\w:\z/s; # feature of CRT 
+    $path .= '/' if $^O eq 'os2' and $path =~ /^\w:\z/s; # feature of CRT
     # Logic wants Unix paths, so go with the flow.
     if ($^O eq 'VMS') {
-        next if $path eq '/';
-        $path = VMS::Filespec::unixify($path);
-        if ($path =~ m:^(/[^/]+)/?\z:) {
-            $path = $1.'/000000';
-        }
+	next if $path eq '/';
+	$path = VMS::Filespec::unixify($path);
+	if ($path =~ m:^(/[^/]+)/?\z:) {
+	    $path = $1.'/000000';
+	}
     }
     return 1 if -d $path;
     my $parent = File::Basename::dirname($path);
     unless (-d $parent or $path eq $parent) {
-        mkpath($parent) || return;
+	mkpath($parent) || return;
     }
     #print "mkdir: $path\n" if $opt_verbose;
     unless (mkdir($path, 0777)) {
-        unless (-d $path) {
-            warn "$ME: cannot mkdir `$path': $!\n";
-            return;
-        }
+	unless (-d $path) {
+	    warn "$ME: cannot mkdir `$path': $!\n";
+	    return;
+	}
     }
     return 1;
 }
