@@ -1,7 +1,7 @@
 use Config;
 use File::Basename qw(basename dirname);
 
-($VERSION)=' $Id: rename.PL,v 1.9 Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
+($VERSION)=' $Id: rename.PL,v 1.10 Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
 
 chdir(dirname($0));
 ($file = basename($0)) =~ s/\.PL$//;
@@ -467,6 +467,10 @@ If you give an invalid Perl expression you'll get a syntax error.
 =head1 AUTHOR
 
 Peder Stray <pederst@cpan.org>, original script from Larry Wall.
+
+=head1 BUGS
+
+Report any issues at L<https://github.com/pstray/rename/issues>.
 
 =cut
 !NO!SUBST!

@@ -1,5 +1,9 @@
 Revision history for Perl tool rename.
 
+1.10 Fri Mar 19 22:00:12 2021
+	- Skip files containing 0-bytes
+	- Fix a backup file issue related to wildcards
+
 1.9  Fri Jul  4 02:51:17 2014
 	- use bsd_glob to handle files with space in the name.
 
