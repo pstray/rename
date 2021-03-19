@@ -193,7 +193,7 @@ for (@ARGV) {
 		}
 	    }
 	    else {
-		($old) = sort {($b=~/~(\d+)~$/)[0] <=> ($a=~/~(\d+)~$/)[0]} bsd_glob "$_.~*~";
+		($old) = sort {($b=~/~(\d+)~$/)[0] <=> ($a=~/~(\d+)~$/)[0]} bsd_glob "\Q$_\E.~*~";
 		$old =~ s/~(\d+)~$/'~'.($1+1).'~'/e;
 		if ($vcm == VCM_TEST) {
 		    unless ($old) {
