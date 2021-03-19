@@ -167,6 +167,12 @@ for (@ARGV) {
     die $@ if $@;
     next if $was eq $_;
 
+    if (s/\0.*//) {
+	printf STDERR "%s: `%s' %s> `%s', skipping due to null byte...\n",
+	       $ME, $was, $opt_linkonly ? "=" : '-', $_;
+	next;
+    }
+
     if (-e $_) {
 	unless ($opt_force) {
 	    if (! -w && -t) {
