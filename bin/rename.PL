@@ -349,7 +349,7 @@ Remove existing destination files and never prompt the user.
 
 Print a summary of options and exit.
 
-=item B<-no-stdin>
+=item B<--no-stdin>
 
 Disable reading of filenames from STDIN. Us it when your shell has nullglob
 enabled to make sure rename doesn't wait for input.
@@ -442,12 +442,12 @@ To translate uppercase names to lower, you'd use
 
 More examples:
 
-    rename 's/\.flip$/.flop/'       # rename *.flip to *.flop
-    rename s/flip/flop/             # rename *flip* to *flop*
-    rename 's/^s\.(.*)/$1.X/'       # switch sccs filenames around
+    rename 's/\.flip$/.flop/' *     # rename *.flip to *.flop
+    rename s/flip/flop/ *           # rename *flip* to *flop*
+    rename 's/^s\.(.*)/$1.X/' *     # switch sccs filenames around
     rename 's/$/.orig/' */*.[ch]    # add .orig to source files in */
-    rename 'y/A-Z/a-z/'             # lowercase all filenames in .
-    rename 'y/A-Z/a-z/ if -B'       # same, but just binaries!
+    rename 'y/A-Z/a-z/' *           # lowercase all filenames in .
+    rename 'y/A-Z/a-z/ if -B' *     # same, but just binaries!
 or even
     rename chop *~                  # restore all ~ backup files
 
