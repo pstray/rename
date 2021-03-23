@@ -445,7 +445,7 @@ More examples:
     rename 's/\.flip$/.flop/'       # rename *.flip to *.flop
     rename s/flip/flop/             # rename *flip* to *flop*
     rename 's/^s\.(.*)/$1.X/'       # switch sccs filenames around
-    rename 's/$/.orig/ */*.[ch]'    # add .orig to source files in */
+    rename 's/$/.orig/' */*.[ch]    # add .orig to source files in */
     rename 'y/A-Z/a-z/'             # lowercase all filenames in .
     rename 'y/A-Z/a-z/ if -B'       # same, but just binaries!
 or even
