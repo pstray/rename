@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.11 Tue Mar 23 13:41:00 2021
+     	- Fix examples in documentation
+
 1.10 Fri Mar 19 22:00:12 2021
 	- Skip files containing 0-bytes
 	- Fix a backup file issue related to wildcards
