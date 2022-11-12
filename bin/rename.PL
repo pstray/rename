@@ -22,6 +22,7 @@ use strict;
 use Getopt::Long;
 use Text::Abbrev;
 use File::Basename;
+use File::Copy qw(copy);
 use File::Glob ':bsd_glob';
 
 my \$VERSION = '$VERSION';
@@ -38,6 +39,7 @@ $| = 1;
 
 my $opt_dryrun          = 0;
 my $opt_backup          = 0;
+my $opt_copy            = 0;
 my $opt_force           = 0;
 my $opt_interactive     = 0;
 my $opt_verbose         = 0;
@@ -76,6 +78,7 @@ sub error {
     };
     GetOptions(
 	       'b|backup'             => \$opt_backup,
+	       'c|copy'               => \$opt_copy,
 	       'B|prefix=s'           => \$opt_prefix,
 	       'f|force'              => \$opt_force,
 	       'h|help'               => \$opt_help,
@@ -91,6 +94,10 @@ sub error {
 	      );
 }
 
+if($opt_copy and $opt_linkonly) {
+    error("cannot both copy and link.");
+}
+
 if ($opt_version) {
     print "$ME $VERSION\n";
     exit 0;
@@ -102,6 +109,7 @@ Usage: $ME [OPTION]... PERLEXPR FILE...
 Rename FILE(s) using PERLEXPR on each filename.
 
   -b, --backup                  make backup before removal
+  -c, --copy                    copy file instead of rename
   -B, --prefix=SUFFIX           set backup filename prefix
   -f, --force                   remove existing destinations, never prompt
   -i, --interactive             prompt before overwrite
@@ -247,6 +255,9 @@ for (@ARGV) {
 	if ($opt_linkonly) {
 	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
 	}
+	elsif ($opt_copy) {
+	    copy($was,$_) || warn "$ME: cannot create `$_': $!\n";
+	}
 	else {
 	    rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
 	}
@@ -288,13 +299,14 @@ rename - renames multiple files using perl expressions
 =head1 SYNOPSIS
 
 B<rename>
-[B<-bfilnv>]
+[B<-bcfilnv>]
 [B<-B> I<prefix>]
 [B<-S> I<suffix>]
 [B<-V> I<method>]
 [B<-Y> I<prefix>]
 [B<-z> I<suffix>]
 [B<--backup>]
+[B<--copy>]
 [B<--basename-prefix=>I<prefix>]
 [B<--dry-run>]
 [B<--force>]
@@ -340,6 +352,11 @@ option fo details about how backup file names are determined.
 Use the B<simple> method to determine backup file names (see the B<-V>
 I<method> or B<--version-control=>I<method> option), and prepend
 I<prefix> to a file name when generating its backup file name.
+
+=item B<-c>, B<--copy>
+
+Copy files to the new names instead of renaming them. This will keep the
+original files.
 
 =item B<-f>, B<--force>
 
