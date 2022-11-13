@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.12 Sun Nov 13 16:13:00 2022
+	. Add -c|--copy option
+
 1.11 Tue Mar 23 13:41:00 2021
      	- Fix examples in documentation
 
