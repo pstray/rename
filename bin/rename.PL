@@ -94,7 +94,7 @@ sub error {
 	      );
 }
 
-if($opt_copy and $opt_linkonly) {
+if ($opt_copy && $opt_linkonly) {
     error("cannot both copy and link.");
 }
 
