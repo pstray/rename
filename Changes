@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.13 Mon Feb 13 14:24:37 CET 2023
+	- Add --shell-completion=bash
+
 1.12 Sun Nov 13 16:13:00 CET 2022
 	- Add -c|--copy option
 
