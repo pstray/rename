@@ -12,7 +12,7 @@ open OUT,">$file" or die "Can't create $file: $!";
 chmod(0755, $file);
 print "Extracting $file\n";
 
-print OUT <<"!DO!SUBST!";
+$code = <<"!DO!SUBST!";
 $Config{'startperl'}
 
 #line 18
@@ -29,7 +29,9 @@ my \$VERSION = '$VERSION';
 
 !DO!SUBST!
 
-print OUT<<'!NO!SUBST!';
+$code .= <<'!NO!SUBST!';
+#line 33
+
 Getopt::Long::config(qw(bundling));
 $Getopt::Long::prefix = '--';
 
@@ -53,6 +55,7 @@ my $opt_basename_prefix = '';
 my $opt_vcm             = $ENV{RENAME_VERSION_CONTROL}
 			|| $ENV{VERSION_CONTROL}
 			|| 'existing';
+my $mopt_shellcompletion;
 
 sub VCM_SIMPLE   { 0 }
 sub VCM_TEST     { 1 }
@@ -91,7 +94,19 @@ sub error {
 	       'V|version-control=s'  => \$opt_vcm,
 	       'Y|basename-prefix=s'  => \$opt_basename_prefix,
 	       'z|S|suffix=s'         => \$opt_suffix,
+	       'shell-completion|shellcompletion=s' => \$mopt_shellcompletion,
 	      );
+}
+
+if ($mopt_shellcompletion) {
+    if ($mopt_shellcompletion eq 'bash') {
+      shellcompletion_bash();
+    }
+    else {
+      warn "No completion support for `$mopt_shellcompletion`\n";
+      exit 1;
+    }
+    exit 0;
 }
 
 if ($opt_copy && $opt_linkonly) {
@@ -289,6 +304,30 @@ sub mkpath {
     }
     return 1;
 }
+
+sub shellcompletion_bash {
+    print "complete -F _comp_rename rename;";
+    print "_comp_rename () { ";
+!NO!SUBST!
+
+@opts = ();
+while ($code =~ m{'([^']*)'\s*=>\s*\\\$opt_}g) {
+    $_ = $1;
+    s/[:=].*//;
+    @o = split /\|/;
+    for (@o) {
+	s/!$// && push @o, "no-$_";
+    }
+    push @opts, map { length>1 ? "--$_" : "-$_" } @o;
+}
+$code .= q!    print 'COMPREPLY=($(compgen -W "!;
+$code .= join " ", @opts;
+$code .= q!" -- "${COMP_WORDS[$COMP_CWORD]}"));';!."\n";
+$code .= q!    print " };\n";!."\n";
+$code .= q!}!."\n";
+
+$doc = <<'!NO!SUBST!';
+#line 330
 
 __END__
 
@@ -491,3 +530,5 @@ Report any issues at L<https://github.com/pstray/rename/issues>.
 
 =cut
 !NO!SUBST!
+
+print OUT "$code$doc";
