@@ -102,6 +102,9 @@ if ($mopt_shellcompletion) {
     if ($mopt_shellcompletion eq 'bash') {
       shellcompletion_bash();
     }
+    elsif ($mopt_shellcompletion eq 'zsh') {
+      shellcompletion_zsh();
+    }
     else {
       warn "No completion support for `$mopt_shellcompletion`\n";
       exit 1;
@@ -136,6 +139,7 @@ Rename FILE(s) using PERLEXPR on each filename.
   -z, -S, --suffix=SUFFIX       set backup filename suffix
       --help                    display this help and exit
       --version                 output version information and exit
+      --shell-completion=SHELL  print shell completion and exit
 
 The backup suffix is ~, unless set with SIMPLE_BACKUP_SUFFIX.  The
 version control may be set with VERSION_CONTROL, values are:
@@ -316,7 +320,7 @@ while ($code =~ m{'([^']*)'\s*=>\s*\\\$opt_}g) {
     s/[:=].*//;
     @o = split /\|/;
     for (@o) {
-	s/!$// && push @o, "no-$_";
+        s/!$// && push @o, "no-$_";
     }
     push @opts, map { length>1 ? "--$_" : "-$_" } @o;
 }
@@ -325,6 +329,44 @@ $code .= join " ", @opts;
 $code .= q!" -- "${COMP_WORDS[$COMP_CWORD]}"));';!."\n";
 $code .= q!    print " };\n";!."\n";
 $code .= q!}!."\n";
+
+my @methods = ();
+while ($code =~ m{(\S+)\s*=>\s*VCM_}g) {
+    push @methods, $1;
+}
+my $src = $code;
+$src =~ s=.*<<HELP;$/(.*)HELP.*=$1=s;
+@lines = ();
+while ($src =~ m{^\s+(-.*)}gm) {
+    $_ = $1;
+    # change `-V, --version-control` to `-V,--version-control`
+    s/, -/,-/g;
+    # change `-V,--version-control` to `{-V,--version-control}`
+    s/(-[^= ]+,[^= ]+)(=|\s)/{$1}$2/;
+    # change `{-V,--version-control}=METHOD  XXXX` to `{-V,--version-control}"[XXXX]":METHOD`
+    s/=(\S+)\s+(.*)/"[$2]:$1"/;
+    # change `{-f,--force}  XXXX` to `{-f,--force}"[XXXX]"`
+    s/\s\s+(.*)/"[$1]"/;
+    # change `--help` to `'(- : *)'--help`
+    s/(.*and exit)/'(- : *)'$1/;
+    s/(:METHOD)/$1:(@methods)/;
+    s/(:SHELL)/$1:(bash zsh)/;
+    push @lines, "$_";
+}
+
+$src = join "$/  ", @lines;
+$code .= <<"!DO!SUBST!";
+sub shellcompletion_zsh {
+    print <<EOF;
+#compdef \$ME
+local options=(
+  $src
+)
+_arguments -S -s \\\$options '1:perl expr' '*:: :_files'
+EOF
+}
+
+!DO!SUBST!
 
 $doc = <<'!NO!SUBST!';
 #line 330
@@ -355,6 +397,8 @@ B<rename>
 [B<--just-print>]
 [B<--link-only>]
 [B<--prefix=>I<prefix>]
+[B<--shell-completion=>I<shell>]
+[B<--shellcompletion=>I<shell>]
 [B<--suffix=>I<suffix>]
 [B<--verbose>]
 [B<--version-control=>I<method>]
@@ -426,6 +470,10 @@ Do everything but the actual renaming, instead just print the name of
 each file that would be renamed. When used together with B<--verbose>,
 also print names of backups (which may or may not be correct depending
 on previous renaming).
+
+=item B<--shellcompletion=>I<shell>, B<--shell-completion=>I<shell>
+
+Print the completion of shell. Currently support bash, zsh.
 
 =item B<-v>, B<--verbose>
 
