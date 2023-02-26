@@ -57,6 +57,7 @@ my $opt_vcm             = $ENV{RENAME_VERSION_CONTROL}
 			|| 'existing';
 my $mopt_shellcompletion;
 
+sub VCM_OFF      { -1 }
 sub VCM_SIMPLE   { 0 }
 sub VCM_TEST     { 1 }
 sub VCM_NUMBERED { 2 }
@@ -140,6 +141,7 @@ Rename FILE(s) using PERLEXPR on each filename.
 The backup suffix is ~, unless set with SIMPLE_BACKUP_SUFFIX.  The
 version control may be set with VERSION_CONTROL, values are:
 
+  none, off       never make backups (even if --backup is given)
   numbered, t     make numbered backups
   existing, nil   numbered if numbered backups exist, simple otherwise
   simple, never   always make simple backups
@@ -154,7 +156,7 @@ if ($opt_backup) {
 	$vcm = VCM_SIMPLE;
     }
     else {
-	$vcm = ${abbrev qw(nil existing t numbered never simple)}{$opt_vcm};
+	$vcm = ${abbrev qw(none off nil existing t numbered never simple)}{$opt_vcm};
 	error("invalid version contol type `$opt_vcm'") unless $vcm;
 	$vcm = ${{ nil      => VCM_TEST,
 		   existing => VCM_TEST,
@@ -162,9 +164,13 @@ if ($opt_backup) {
 		   numbered => VCM_NUMBERED,
 		   never    => VCM_SIMPLE,
 		   simple   => VCM_SIMPLE,
+		   none     => VCM_OFF,
+		   off      => VCM_OFF,
 		}}{$vcm};
     }
-
+    if ($vcm == VCM_OFF) {
+	$opt_backup = 0;
+    }
     $opt_suffix ||= $ENV{SIMPLE_BACKUP_SUFFIX} || '~';
 }
 
