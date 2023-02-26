@@ -524,6 +524,11 @@ Use the B<simple> method to determine backup file names (see the B<-V>
 I<method> or B<--version-control=>I<method> option), and append
 I<suffix> to a file name when generating its backup file name.
 
+=item B<--shell-completion=>I<shell>, B<--shellcompletion=>I<shell>
+
+Generate shell code for parameter completion for either B<bash> or
+B<zsh>.
+
 =back
 
 =head1 EXAMPLES
