@@ -81,20 +81,20 @@ sub error {
 	}
     };
     GetOptions(
-	       'b|backup'             => \$opt_backup,
-	       'c|copy'               => \$opt_copy,
-	       'B|prefix=s'           => \$opt_prefix,
-	       'f|force'              => \$opt_force,
-	       'h|help'               => \$opt_help,
-	       'i|interactive'        => \$opt_interactive,
-	       'l|link-only'          => \$opt_linkonly,
-	       'n|just-print|dry-run' => \$opt_dryrun,
-	       's|stdin!'             => \$opt_stdin,
-	       'version'              => \$opt_version,
-	       'v|verbose'            => \$opt_verbose,
-	       'V|version-control=s'  => \$opt_vcm,
-	       'Y|basename-prefix=s'  => \$opt_basename_prefix,
-	       'z|S|suffix=s'         => \$opt_suffix,
+	       'b|backup'             => \$opt_backup,		# [make a backup of each existing destionation file]
+	       'c|copy'               => \$opt_copy,		# [copy files instead of rename]
+	       'B|prefix=s'           => \$opt_prefix,		# [set backup filename prefix]:backup filename prefix
+	       'f|force'              => \$opt_force,		# [do not prompt before overwriting]
+	       'h|help'               => \$opt_help,		# -[display help and exit]
+	       'i|interactive'        => \$opt_interactive,	# [prompt before overwrite]
+	       'l|link-only'          => \$opt_linkonly,	# [hard link files instead of rename]
+	       'n|just-print|dry-run' => \$opt_dryrun,		# [don't rename, implies --verbose]
+	       's|stdin!'             => \$opt_stdin,		# [read filenames from standard input]
+	       'version'              => \$opt_version,		# -[output version information and exit]
+	       'v|verbose'            => \$opt_verbose,		# [explain what is being done]
+	       'V|version-control=s'  => \$opt_vcm,		# [set backup method]:backup method:(({none,off}\:never\ make\ backups\ \(even\ if\ --backup\ is\ given\) {numbered,t}\:make\ numbered\ backups {existing,nil}\:numbered\ if\ numbered\ backups\ exist,\ simple\ otherwise {simple,never}\:always\ make\ simple\ backups))
+	       'Y|basename-prefix=s'  => \$opt_basename_prefix,	# [set backup file basename prefix]:backup basename prefix
+	       'z|S|suffix=s'         => \$opt_suffix,		# [set backup filename suffix]:backup filename suffix
 	       'shell-completion|shellcompletion=s' => \$mopt_shellcompletion,
 	      );
 }
@@ -102,6 +102,9 @@ sub error {
 if ($mopt_shellcompletion) {
     if ($mopt_shellcompletion eq 'bash') {
       shellcompletion_bash();
+    }
+    elsif ($mopt_shellcompletion eq 'zsh') {
+      shellcompletion_zsh();
     }
     else {
       warn "No completion support for `$mopt_shellcompletion`\n";
@@ -311,29 +314,61 @@ sub mkpath {
     return 1;
 }
 
+!NO!SUBST!
+
+while ($code =~ s{('([^']*)'\s*=>\s*\\\$opt_\S+,)\s*(?:\#\s*(.*))}{$1}) {
+    print ">>> [$1] [$2] [$3]\n";
+    $_ = $2;
+    $zo = $3;
+    $zg = $zo =~ s/^-// ? "'(*)'" : '';
+    $zo =~ s/'/'"'"'/g;
+    s/[:=].*//;
+    $neg = s/!$//;
+    @o = split /\|/;
+    $zd = join ",", map { length>1 ? "--$_" : "-$_" } @o;
+    $zd = "{$zd}" if @o>1;
+    push @z_opts, "$zg$zd'$zo'";
+    if ($neg) {
+	$zd = join ",", map { "--no-$_" } @o;
+	$zd = "{$zd}" if @o>1;
+	$zo =~ s/\[/[don'"'"'t /;
+	push @z_opts, "$zg$zd'$zo'";
+    }
+    push @b_opts, map { length>1 ? "--$_" : "-$_" } @o;
+    push @b_opts, map { "--no-$_" } @o if $neg;
+
+}
+
+$code .= << '!NO!SUBST!';
 sub shellcompletion_bash {
-    print "complete -F _comp_rename rename;";
+    print "complete -F _comp_rename rename; ";
     print "_comp_rename () { ";
 !NO!SUBST!
 
-@opts = ();
-while ($code =~ m{'([^']*)'\s*=>\s*\\\$opt_}g) {
-    $_ = $1;
-    s/[:=].*//;
-    @o = split /\|/;
-    for (@o) {
-	s/!$// && push @o, "no-$_";
-    }
-    push @opts, map { length>1 ? "--$_" : "-$_" } @o;
+$code .= q!    print q[COMPREPLY=($(compgen -W "!;
+$code .= join " ", @b_opts;
+$code .= q!" -- "${COMP_WORDS[$COMP_CWORD]}"));];!."\n";
+
+$code .= << '!NO!SUBST!';
+    print " };\n";
 }
-$code .= q!    print 'COMPREPLY=($(compgen -W "!;
-$code .= join " ", @opts;
-$code .= q!" -- "${COMP_WORDS[$COMP_CWORD]}"));';!."\n";
-$code .= q!    print " };\n";!."\n";
-$code .= q!}!."\n";
+
+sub shellcompletion_zsh {
+    print "compdef _comp_rename rename; ";
+    print "_comp_rename () { ";
+!NO!SUBST!
+
+$code .= q!    print q[_arguments -S -s !;
+$code .= join " ", @z_opts;
+$code .= q! '1:perl expression' '*:: :_files';];!."\n";
+
+$code .= <<'!NO!SUBST!';
+    print " };\n";
+}
+!NO!SUBST!
 
 $doc = <<'!NO!SUBST!';
-#line 330
+#line 371
 
 __END__
 
