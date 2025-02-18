@@ -1,5 +1,8 @@
 Revision history for Perl tool rename.
 
+1.15 Tue Feb 18 12:56:31 CET 2025
+	- Make rename locale aware
+
 1.14 Sun Feb 26 22:07:31 CET 2023
 	- Add --shell-completion=zsh and docs
 

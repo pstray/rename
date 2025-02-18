@@ -1,7 +1,7 @@
 use Config;
 use File::Basename qw(basename dirname);
 
-($VERSION)=' $Id: rename.PL,v 1.14 Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
+($VERSION)=' $Id: rename.PL,v 1.15 Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
 
 chdir(dirname($0));
 ($file = basename($0)) =~ s/\.PL$//;
@@ -13,7 +13,7 @@ chmod(0755, $file);
 print "Extracting $file\n";
 
 $code = <<"!DO!SUBST!";
-$Config{'startperl'}
+$Config{'startperl'} -CASL
 
 #line 18
 
