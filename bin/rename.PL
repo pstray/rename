@@ -41,6 +41,7 @@ $| = 1;
 
 my $opt_dryrun          = 0;
 my $opt_backup          = 0;
+my $opt_command         = undef;
 my $opt_copy            = 0;
 my $opt_force           = 0;
 my $opt_interactive     = 0;
@@ -55,7 +56,7 @@ my $opt_basename_prefix = '';
 my $opt_vcm             = $ENV{RENAME_VERSION_CONTROL}
 			|| $ENV{VERSION_CONTROL}
 			|| 'existing';
-my $mopt_shellcompletion;
+my $opt_shellcompletion;
 
 sub VCM_OFF      { -1 }
 sub VCM_SIMPLE   { 0 }
@@ -83,8 +84,10 @@ sub error {
     GetOptions(
 	       'b|backup'             => \$opt_backup,		# [make a backup of each existing destionation file]
 	       'c|copy'               => \$opt_copy,		# [copy files instead of rename]
+	       'C|cmd|command=s'      => \$opt_command,         # [specify command to use instead of rename]
 	       'B|prefix=s'           => \$opt_prefix,		# [set backup filename prefix]:backup filename prefix
 	       'f|force'              => \$opt_force,		# [do not prompt before overwriting]
+	       'g|git'                => sub { $opt_command = 'git mv' }, # [use git to move files instead of rename]
 	       'h|help'               => \$opt_help,		# -[display help and exit]
 	       'i|interactive'        => \$opt_interactive,	# [prompt before overwrite]
 	       'l|link-only'          => \$opt_linkonly,	# [hard link files instead of rename]
@@ -95,20 +98,45 @@ sub error {
 	       'V|version-control=s'  => \$opt_vcm,		# [set backup method]:backup method:(({none,off}\:never\ make\ backups\ \(even\ if\ --backup\ is\ given\) {numbered,t}\:make\ numbered\ backups {existing,nil}\:numbered\ if\ numbered\ backups\ exist,\ simple\ otherwise {simple,never}\:always\ make\ simple\ backups))
 	       'Y|basename-prefix=s'  => \$opt_basename_prefix,	# [set backup file basename prefix]:backup basename prefix
 	       'z|S|suffix=s'         => \$opt_suffix,		# [set backup filename suffix]:backup filename suffix
-	       'shell-completion|shellcompletion=s' => \$mopt_shellcompletion,
+	       'shell-completion|shellcompletion=s' => \$opt_shellcompletion,
 	      );
 }
 
-if ($mopt_shellcompletion) {
-    if ($mopt_shellcompletion eq 'bash') {
-      shellcompletion_bash();
+if ($opt_command) {
+    if ($opt_backup) {
+	error("error: --backup is incompatible with --cmd");
     }
-    elsif ($mopt_shellcompletion eq 'zsh') {
-      shellcompletion_zsh();
+
+    my $o = eval { sprintf $opt_command };
+    unless ($o eq $opt_command) {
+	error("error: --command parameter '$opt_command' contains format sequences");
+    }
+
+    my $count = () = $opt_command =~ /\{\}/g;
+    unless ($count) {
+	$opt_command .= " {} {}";
+	$count+=2;
+    }
+
+    unless ($count == 2) {
+       error("error: command need exactly 0 or 2 of {} for parameter substituion");
+    }
+
+    for ($opt_command) {
+	s/\{\}/%s/g;
+    }
+}
+
+if ($opt_shellcompletion) {
+    if ($opt_shellcompletion eq 'bash') {
+	shellcompletion_bash();
+    }
+    elsif ($opt_shellcompletion eq 'zsh') {
+	shellcompletion_zsh();
     }
     else {
-      warn "No completion support for `$mopt_shellcompletion`\n";
-      exit 1;
+	warn "No completion support for `$opt_shellcompletion`\n";
+	exit 1;
     }
     exit 0;
 }
@@ -129,8 +157,10 @@ Rename FILE(s) using PERLEXPR on each filename.
 
   -b, --backup                  make backup before removal
   -c, --copy                    copy file instead of rename
+  -C, --commmand=COMMAND        use COMMAND instead of rename
   -B, --prefix=SUFFIX           set backup filename prefix
   -f, --force                   remove existing destinations, never prompt
+  -g, --git                     use 'git mv' instead of rename
   -i, --interactive             prompt before overwrite
   -l, --link-only               link file instead of rename
   -n, --just-print, --dry-run   don't rename, implies --verbose
@@ -260,9 +290,6 @@ for (@ARGV) {
 	}
     }
 
-    print "$was ", $opt_linkonly ? "=" : '-', "> $_\n"
-       if $opt_verbose || $opt_dryrun;
-
     if (m,/,) {
 	my $dir = File::Basename::dirname($_);
 	unless (-d $dir) {
@@ -275,16 +302,29 @@ for (@ARGV) {
 	 }
     }
 
-    unless ($opt_dryrun) {
-	if ($opt_linkonly) {
-	    link($was,$_) || warn "$ME: cannot create `$_': $!\n";
-	}
-	elsif ($opt_copy) {
-	    copy($was,$_) || warn "$ME: cannot create `$_': $!\n";
+    if ($opt_dryrun || $opt_verbose) {
+	if ($opt_command) {
+	    printf "exec: $opt_command\n", "\Q$was", "\Q$_";
 	}
 	else {
-	    rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
+	    print "$was ", $opt_linkonly ? "=" : '-', "> $_\n"
 	}
+    }
+
+    next if $opt_dryrun;
+
+    if ($opt_command) {
+	my $cmd = sprintf($opt_command, "\Q$was", "\Q$_");
+	system $cmd || warn "$ME: error running `$cmd': $!\n";
+    }
+    elsif ($opt_linkonly) {
+	link($was,$_) || warn "$ME: cannot create `$_': $!\n";
+    }
+    elsif ($opt_copy) {
+	copy($was,$_) || warn "$ME: cannot create `$_': $!\n";
+    }
+    else {
+	rename($was,$_) || warn "$ME: cannot create `$_': $!\n";
     }
 }
 
@@ -368,7 +408,7 @@ $code .= <<'!NO!SUBST!';
 !NO!SUBST!
 
 $doc = <<'!NO!SUBST!';
-#line 371
+#line 411
 
 __END__
 
@@ -379,13 +419,15 @@ rename - renames multiple files using perl expressions
 =head1 SYNOPSIS
 
 B<rename>
-[B<-bcfilnv>]
+[B<-bcfgilnv>]
 [B<-B> I<prefix>]
+[B<-C> I<command>]
 [B<-S> I<suffix>]
 [B<-V> I<method>]
 [B<-Y> I<prefix>]
 [B<-z> I<suffix>]
 [B<--backup>]
+[B<--command=>I<command>]
 [B<--copy>]
 [B<--basename-prefix=>I<prefix>]
 [B<--dry-run>]
