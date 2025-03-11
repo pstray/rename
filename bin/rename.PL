@@ -480,9 +480,20 @@ I<prefix> to a file name when generating its backup file name.
 Copy files to the new names instead of renaming them. This will keep the
 original files.
 
+=item B<-C> I<command>, B<--cmd> I<command>, B<--command> I<command>
+
+Use I<command> to process files instead of rename. I<command> can
+contain two instances of {}, the first will be replaced with the
+original filename, the second with the new.  Without any {}'s, the old
+and new filename will be appended to the I<command>.
+
 =item B<-f>, B<--force>
 
 Remove existing destination files and never prompt the user.
+
+=item B<-g>, B<--git>
+
+Shortcut for B<--command "git mv">.
 
 =item B<-h>, B<--help>
 
