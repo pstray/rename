@@ -1,9 +1,12 @@
 use Config;
 use File::Basename qw(basename dirname);
 
-($VERSION)=' $Id: rename.PL,v 1.16 Exp $ '=~/v\s*(\d+(?:\.\d+)+)/;
-
 chdir(dirname($0));
+
+require '../lib/App/rename.pm';
+
+($VERSION) = $App::rename::VERSION;
+
 ($file = basename($0)) =~ s/\.PL$//;
 $file =~ s/\.pl$//
 	if ($Config{'osname'} eq 'VMS' or
@@ -589,7 +592,7 @@ B<zsh>.
 To rename all files matching *.bak to strip the extension, you might
 say
 
-    rename 's/\e.bak$//' *.bak
+    rename 's/\.bak$//' *.bak
 
 To translate uppercase names to lower, you'd use
 
@@ -605,6 +608,21 @@ More examples:
     rename 'y/A-Z/a-z/ if -B' *     # same, but just binaries!
 or even
     rename chop *~                  # restore all ~ backup files
+
+Use --git when working within a GIT repo:
+
+    # rename _-separated filenames to camel-case, using git mv
+    rename --git 's/([a-z]+)_/\u\L$1/g' *.c
+
+    # or just renaming all the *.yml files to *.yaml
+    rename -g 's/\.yml$/.yaml/ *.yml
+
+With the --command parameter you can make rename do other interesing
+stuff like:
+
+    # make thumbnails in PNG format of all JPEG file
+    rename 's/\.jpg/-thumb.png/' -C 'convert {} -resize 120x120 {}' *.jpg
+
 
 =head1 ENVIRONMENT
 
