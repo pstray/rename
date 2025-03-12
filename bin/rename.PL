@@ -360,7 +360,7 @@ sub mkpath {
 !NO!SUBST!
 
 while ($code =~ s{('([^']*)'\s*=>\s*\\\$opt_\S+,)\s*(?:\#\s*(.*))}{$1}) {
-    print ">>> [$1] [$2] [$3]\n";
+    #print ">>> [$1] [$2] [$3]\n";
     $_ = $2;
     $zo = $3;
     $zg = $zo =~ s/^-// ? "'(*)'" : '';
@@ -417,7 +417,7 @@ __END__
 
 =head1 NAME
 
-rename - renames multiple files using perl expressions
+rename - rename multiple files using perl expressions
 
 =head1 SYNOPSIS
 

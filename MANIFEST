@@ -1,5 +1,7 @@
 Changes
+LICENSE
 MANIFEST
-README.md
 Makefile.PL
+README.md
 bin/rename.PL
+lib/App/rename.pm
